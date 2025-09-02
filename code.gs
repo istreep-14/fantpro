@@ -1,3 +1,155 @@
+// Function to create custom menu when spreadsheet opens
+function onOpen() {
+  const ui = SpreadsheetApp.getUi();
+  
+  ui.createMenu('Fantasy Tools')
+    .addItem('Run All (Setup → Fetch → Master List)', 'runAllOperations')
+    .addSeparator()
+    .addItem('Setup Batch Scraper Config', 'setupBatchScraper')
+    .addItem('Batch Process All URLs', 'batchProcessUrls')
+    .addItem('Generate Master Rankings', 'runGenerateMasterRankings')
+    .addSeparator()
+    .addItem('Fetch Single RB Data (Example)', 'fetchFantasyProsData')
+    .addToUi();
+}
+
+// Master function to run all operations at once
+function runAllOperations() {
+  const ui = SpreadsheetApp.getUi();
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  
+  // Confirm action
+  const response = ui.alert(
+    'Run All Operations',
+    'This will:\n' +
+    '1. Setup/verify configuration\n' +
+    '2. Fetch data from all configured URLs\n' +
+    '3. Generate master rankings\n\n' +
+    'This may take several minutes. Continue?',
+    ui.ButtonSet.YES_NO
+  );
+  
+  if (response !== ui.Button.YES) {
+    return;
+  }
+  
+  const startTime = new Date();
+  const results = {
+    setup: false,
+    fetched: 0,
+    errors: [],
+    masterGenerated: false
+  };
+  
+  try {
+    // Step 1: Setup configuration if not exists
+    let configSheet;
+    try {
+      configSheet = spreadsheet.getSheetByName('Config');
+      Logger.log('Config sheet already exists');
+    } catch (e) {
+      Logger.log('Creating config sheet...');
+      setupBatchScraper();
+      configSheet = spreadsheet.getSheetByName('Config');
+      results.setup = true;
+    }
+    
+    // Step 2: Run batch processing
+    Logger.log('Starting batch processing...');
+    const configData = configSheet.getDataRange().getValues();
+    const totalUrls = configData.length - 1; // Subtract header row
+    
+    // Process each URL configuration
+    for (let i = 1; i < configData.length; i++) {
+      const tabName = configData[i][0];
+      const url = configData[i][1];
+      const headers = configData[i][2];
+      const calculateTeam = configData[i][3] === 'true';
+      
+      if (!tabName || !url) continue;
+      
+      try {
+        Logger.log(`Processing ${tabName}...`);
+        const headerArray = headers.split(',').map(h => h.trim());
+        const data = fetchAndParseData(url, headerArray, calculateTeam);
+        
+        if (data && data.length > 0) {
+          createOrUpdateSheet(spreadsheet, tabName, data);
+          results.fetched++;
+          Logger.log(`Successfully processed ${tabName}: ${data.length} rows`);
+        }
+      } catch (error) {
+        const errorMsg = `Failed to process ${tabName}: ${error.toString()}`;
+        Logger.log(errorMsg);
+        results.errors.push(errorMsg);
+      }
+      
+      // Add a small delay to avoid hitting rate limits
+      Utilities.sleep(1000);
+    }
+    
+    // Step 3: Generate master rankings
+    Logger.log('Generating master rankings...');
+    generateMasterRankings(spreadsheet);
+    results.masterGenerated = true;
+    
+    // Calculate execution time
+    const endTime = new Date();
+    const duration = Math.round((endTime - startTime) / 1000);
+    
+    // Show final results
+    let message = 'Operations completed!\n\n';
+    if (results.setup) {
+      message += '✓ Configuration sheet created\n';
+    }
+    message += `✓ Fetched data from ${results.fetched} sources\n`;
+    if (results.masterGenerated) {
+      message += '✓ Master rankings generated\n';
+    }
+    message += `\nTotal time: ${duration} seconds\n`;
+    
+    if (results.errors.length > 0) {
+      message += '\nErrors encountered:\n';
+      results.errors.forEach(error => {
+        message += `• ${error}\n`;
+      });
+    }
+    
+    message += '\nCheck the "Master Rankings" sheet for the final results.';
+    
+    ui.alert('Process Complete', message, ui.ButtonSet.OK);
+    
+  } catch (error) {
+    ui.alert(
+      'Error',
+      'A critical error occurred:\n' + error.toString(),
+      ui.ButtonSet.OK
+    );
+    Logger.log('Critical error in runAllOperations: ' + error.toString());
+  }
+}
+
+// Wrapper function for generateMasterRankings with UI feedback
+function runGenerateMasterRankings() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const ui = SpreadsheetApp.getUi();
+  
+  try {
+    generateMasterRankings(spreadsheet);
+    ui.alert(
+      'Success!',
+      'Master rankings have been generated successfully!\nCheck the "Master Rankings" sheet.',
+      ui.ButtonSet.OK
+    );
+  } catch (error) {
+    ui.alert(
+      'Error',
+      'Failed to generate master rankings: ' + error.toString(),
+      ui.ButtonSet.OK
+    );
+  }
+}
+
 // Team mapping for defense names
 const TEAM_MAPPINGS = {
   'Philadelphia Eagles': 'PHI',
