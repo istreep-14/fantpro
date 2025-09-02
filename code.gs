@@ -1,3 +1,71 @@
+// Team mapping for defense names
+const TEAM_MAPPINGS = {
+  'Philadelphia Eagles': 'PHI',
+  'Eagles': 'PHI',
+  'Denver Broncos': 'DEN',
+  'Broncos': 'DEN',
+  'Buffalo Bills': 'BUF',
+  'Bills': 'BUF',
+  'Houston Texans': 'HOU',
+  'Texans': 'HOU',
+  'Baltimore Ravens': 'BAL',
+  'Ravens': 'BAL',
+  'Green Bay Packers': 'GB',
+  'Packers': 'GB',
+  'Pittsburgh Steelers': 'PIT',
+  'Steelers': 'PIT',
+  'Minnesota Vikings': 'MIN',
+  'Vikings': 'MIN',
+  'New York Giants': 'NYG',
+  'Giants': 'NYG',
+  'Detroit Lions': 'DET',
+  'Lions': 'DET',
+  'Los Angeles Rams': 'LAR',
+  'Rams': 'LAR',
+  'Los Angeles Chargers': 'LAC',
+  'Chargers': 'LAC',
+  'San Francisco 49ers': 'SF',
+  '49ers': 'SF',
+  'Washington Commanders': 'WAS',
+  'Commanders': 'WAS',
+  'Tampa Bay Buccaneers': 'TB',
+  'Buccaneers': 'TB',
+  'Dallas Cowboys': 'DAL',
+  'Cowboys': 'DAL',
+  'Kansas City Chiefs': 'KC',
+  'Chiefs': 'KC',
+  'Seattle Seahawks': 'SEA',
+  'Seahawks': 'SEA',
+  'Chicago Bears': 'CHI',
+  'Bears': 'CHI',
+  'Arizona Cardinals': 'ARI',
+  'Cardinals': 'ARI',
+  'Indianapolis Colts': 'IND',
+  'Colts': 'IND',
+  'Cleveland Browns': 'CLE',
+  'Browns': 'CLE',
+  'New York Jets': 'NYJ',
+  'Jets': 'NYJ',
+  'Cincinnati Bengals': 'CIN',
+  'Bengals': 'CIN',
+  'Las Vegas Raiders': 'LV',
+  'Raiders': 'LV',
+  'Miami Dolphins': 'MIA',
+  'Dolphins': 'MIA',
+  'Atlanta Falcons': 'ATL',
+  'Falcons': 'ATL',
+  'Jacksonville Jaguars': 'JAC',
+  'Jaguars': 'JAC',
+  'New Orleans Saints': 'NO',
+  'Saints': 'NO',
+  'Tennessee Titans': 'TEN',
+  'Titans': 'TEN',
+  'New England Patriots': 'NE',
+  'Patriots': 'NE',
+  'Carolina Panthers': 'CAR',
+  'Panthers': 'CAR'
+};
+
 // Main function to set up the configuration sheet
 function setupBatchScraper() {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -12,34 +80,36 @@ function setupBatchScraper() {
   }
   
   // Set up the configuration table headers
-  const configHeaders = ['Tab Name', 'URL', 'Headers (comma-separated)'];
-  configSheet.getRange(1, 1, 1, 3).setValues([configHeaders]);
+  const configHeaders = ['Tab Name', 'URL', 'Headers (comma-separated)', 'Calculate Team'];
+  configSheet.getRange(1, 1, 1, 4).setValues([configHeaders]);
   
   // Format the header row
-  configSheet.getRange(1, 1, 1, 3).setFontWeight('bold');
-  configSheet.getRange(1, 1, 1, 3).setBackground('#4285f4');
-  configSheet.getRange(1, 1, 1, 3).setFontColor('#ffffff');
+  configSheet.getRange(1, 1, 1, 4).setFontWeight('bold');
+  configSheet.getRange(1, 1, 1, 4).setBackground('#4285f4');
+  configSheet.getRange(1, 1, 1, 4).setFontColor('#ffffff');
   
   // Add example data
   const exampleData = [
-    ['RB_PPR', 'https://www.fantasypros.com/nfl/projections/rb.php?week=draft&scoring=PPR', 'Player,Team,ATT,YDS,TDS,REC,YDS,TDS,FL,FPTS'],
-    ['WR_PPR', 'https://www.fantasypros.com/nfl/projections/wr.php?week=draft&scoring=PPR', 'Player,Team,REC,YDS,TDS,FL,FPTS'],
-    ['QB_Standard', 'https://www.fantasypros.com/nfl/projections/qb.php?week=draft&scoring=STD', 'Player,Team,ATT,CMP,YDS,TDS,INT,FL,FPTS']
+    ['RB_PPR', 'https://www.fantasypros.com/nfl/projections/rb.php?week=draft&scoring=PPR', 'Player,Team,ATT,YDS,TDS,REC,YDS,TDS,FL,FPTS', 'false'],
+    ['WR_PPR', 'https://www.fantasypros.com/nfl/projections/wr.php?week=draft&scoring=PPR', 'Player,Team,REC,YDS,TDS,FL,FPTS', 'false'],
+    ['QB_Standard', 'https://www.fantasypros.com/nfl/projections/qb.php?week=draft&scoring=STD', 'Player,Team,ATT,CMP,YDS,TDS,INT,FL,FPTS', 'false'],
+    ['DEF_PPR', 'https://www.fantasypros.com/nfl/projections/dst.php?week=draft&scoring=PPR', 'Player,Team,FPTS', 'true']
   ];
   
-  configSheet.getRange(2, 1, exampleData.length, 3).setValues(exampleData);
+  configSheet.getRange(2, 1, exampleData.length, 4).setValues(exampleData);
   
   // Auto-resize columns
-  configSheet.autoResizeColumns(1, 3);
+  configSheet.autoResizeColumns(1, 4);
   
   // Set column widths for better visibility
   configSheet.setColumnWidth(1, 120); // Tab Name
   configSheet.setColumnWidth(2, 400); // URL
   configSheet.setColumnWidth(3, 300); // Headers
+  configSheet.setColumnWidth(4, 100); // Calculate Team
   
   // Add instructions
-  configSheet.getRange(exampleData.length + 3, 1, 1, 3).merge();
-  configSheet.getRange(exampleData.length + 3, 1).setValue('Instructions: Fill in the rows above, then run "batchProcessUrls()" function');
+  configSheet.getRange(exampleData.length + 3, 1, 1, 4).merge();
+  configSheet.getRange(exampleData.length + 3, 1).setValue('Instructions: Fill in the rows above, then run "batchProcessUrls()" function. Set "Calculate Team" to "true" for defense sheets.');
   configSheet.getRange(exampleData.length + 3, 1).setBackground('#fff2cc');
   
   SpreadsheetApp.getUi().alert(
@@ -70,7 +140,8 @@ function batchProcessUrls() {
       configs.push({
         tabName: row[0].toString().trim(),
         url: row[1].toString().trim(),
-        headers: row[2].toString().split(',').map(h => h.trim())
+        headers: row[2].toString().split(',').map(h => h.trim()),
+        calculateTeam: row[3] ? row[3].toString().toLowerCase() === 'true' : false
       });
     }
   }
@@ -90,7 +161,7 @@ function batchProcessUrls() {
       Logger.log(`Processing: ${config.tabName} - ${config.url}`);
       
       // Fetch and process data
-      const data = fetchAndParseData(config.url, config.headers);
+      const data = fetchAndParseData(config.url, config.headers, config.calculateTeam);
       
       if (data.length > 1) { // More than just headers
         // Create or update sheet
@@ -119,10 +190,18 @@ function batchProcessUrls() {
     message += '\n\nErrors:\n' + errors.join('\n');
   }
   
+  // Generate master rankings
+  try {
+    generateMasterRankings(spreadsheet);
+    message += '\n\nMaster Rankings sheet created successfully!';
+  } catch (e) {
+    message += '\n\nError creating Master Rankings: ' + e.toString();
+  }
+  
   SpreadsheetApp.getUi().alert('Batch Processing Results', message, SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
-function fetchAndParseData(url, headers) {
+function fetchAndParseData(url, headers, calculateTeam = false) {
   // Fetch the HTML content
   const response = UrlFetchApp.fetch(url, {
     headers: {
@@ -133,10 +212,10 @@ function fetchAndParseData(url, headers) {
   const htmlContent = response.getContentText();
   
   // Parse the HTML to extract table data
-  return parsePlayerData(htmlContent, headers);
+  return parsePlayerData(htmlContent, headers, calculateTeam);
 }
 
-function parsePlayerData(htmlContent, customHeaders) {
+function parsePlayerData(htmlContent, customHeaders, calculateTeam = false) {
   const data = [customHeaders];
   
   // Look for the main data table - Fantasy Pros uses specific table structure
@@ -168,7 +247,7 @@ function parsePlayerData(htmlContent, customHeaders) {
       }
       
       if (cells.length >= 2) {
-        const processedRow = processPlayerRow(cells, customHeaders.length);
+        const processedRow = processPlayerRow(cells, customHeaders.length, calculateTeam);
         if (processedRow && processedRow.length >= Math.min(customHeaders.length, 3)) {
           // Ensure exact number of columns as headers
           while (processedRow.length < customHeaders.length) {
@@ -186,13 +265,13 @@ function parsePlayerData(htmlContent, customHeaders) {
   // If no data found, try alternative parsing
   if (!foundData) {
     Logger.log('Primary parsing failed, trying alternative method...');
-    tryAlternativeParsing(htmlContent, data, customHeaders);
+    tryAlternativeParsing(htmlContent, data, customHeaders, calculateTeam);
   }
   
   return data;
 }
 
-function processPlayerRow(cells, expectedColumns) {
+function processPlayerRow(cells, expectedColumns, calculateTeam = false) {
   if (cells.length === 0) return null;
   
   // The first cell typically contains player name and team concatenated
@@ -227,6 +306,11 @@ function processPlayerRow(cells, expectedColumns) {
     }
   }
   
+  // If calculateTeam is true and team is empty, try to find team from name
+  if (calculateTeam && !team) {
+    team = findTeamFromName(playerName);
+  }
+  
   // Build the processed row
   const processedRow = [playerName, team];
   
@@ -246,7 +330,18 @@ function processPlayerRow(cells, expectedColumns) {
   return processedRow;
 }
 
-function tryAlternativeParsing(htmlContent, data, customHeaders) {
+// Function to find team abbreviation from player/defense name
+function findTeamFromName(playerName) {
+  // Check if the name matches any team in our mapping
+  for (const [teamName, abbreviation] of Object.entries(TEAM_MAPPINGS)) {
+    if (playerName.toLowerCase().includes(teamName.toLowerCase())) {
+      return abbreviation;
+    }
+  }
+  return '';
+}
+
+function tryAlternativeParsing(htmlContent, data, customHeaders, calculateTeam = false) {
   // Look for any table-like structure or try to find player data patterns
   const numColumns = customHeaders.length - 2; // Subtract Player and Team columns
   const statPattern = '\\s*([\\d.-]+)'.repeat(numColumns);
@@ -321,4 +416,144 @@ function fetchFantasyProsData() {
     Logger.log('Error fetching data: ' + error.toString());
     SpreadsheetApp.getUi().alert('Error', 'Failed to fetch data: ' + error.toString(), SpreadsheetApp.getUi().ButtonSet.OK);
   }
+}
+
+// Function to generate master rankings from all player sheets
+function generateMasterRankings(spreadsheet) {
+  const allPlayers = [];
+  const sheets = spreadsheet.getSheets();
+  const configSheet = spreadsheet.getSheetByName('Config');
+  
+  // Get position names from config sheet
+  const configData = configSheet.getDataRange().getValues();
+  const positionMap = {};
+  
+  for (let i = 1; i < configData.length; i++) {
+    const tabName = configData[i][0];
+    if (tabName) {
+      // Extract position from tab name (e.g., RB_PPR -> RB)
+      const position = tabName.split('_')[0];
+      positionMap[tabName] = position;
+    }
+  }
+  
+  // Collect all players from each sheet
+  for (const sheet of sheets) {
+    const sheetName = sheet.getName();
+    
+    // Skip non-player sheets
+    if (sheetName === 'Config' || sheetName === 'Master Rankings') {
+      continue;
+    }
+    
+    const position = positionMap[sheetName] || sheetName;
+    const data = sheet.getDataRange().getValues();
+    
+    // Find FPTS column index
+    const headers = data[0];
+    const fptsIndex = headers.indexOf('FPTS');
+    
+    if (fptsIndex === -1) {
+      Logger.log(`No FPTS column found in sheet: ${sheetName}`);
+      continue;
+    }
+    
+    // Process each player row (skip header)
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const playerName = row[0];
+      const team = row[1] || '';
+      const fpts = parseFloat(row[fptsIndex]) || 0;
+      
+      // Skip empty rows or rows without valid player names
+      if (!playerName || playerName.toString().trim() === '' || 
+          playerName.toString().includes('Last updated')) {
+        continue;
+      }
+      
+      allPlayers.push({
+        name: playerName.toString().trim(),
+        team: team.toString().trim(),
+        position: position,
+        fpts: fpts,
+        // Add a unique identifier for tie-breaking (sheet name + row index)
+        tieBreaker: `${sheetName}_${i.toString().padStart(4, '0')}`
+      });
+    }
+  }
+  
+  // Sort players by FPTS (descending) with tie-breaking
+  allPlayers.sort((a, b) => {
+    if (b.fpts !== a.fpts) {
+      return b.fpts - a.fpts;
+    }
+    // Tie-breaker: use position priority (QB > RB > WR > TE > DEF > K)
+    const positionPriority = {
+      'QB': 1,
+      'RB': 2,
+      'WR': 3,
+      'TE': 4,
+      'DEF': 5,
+      'K': 6
+    };
+    
+    const aPriority = positionPriority[a.position] || 99;
+    const bPriority = positionPriority[b.position] || 99;
+    
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority;
+    }
+    
+    // Final tie-breaker: alphabetical by name
+    return a.name.localeCompare(b.name);
+  });
+  
+  // Create Master Rankings sheet
+  let masterSheet;
+  try {
+    masterSheet = spreadsheet.getSheetByName('Master Rankings');
+    masterSheet.clear();
+  } catch (e) {
+    masterSheet = spreadsheet.insertSheet('Master Rankings');
+  }
+  
+  // Set headers
+  const headers = ['Rank', 'Name', 'Team', 'Pos', 'FPTS'];
+  masterSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  // Format header row
+  masterSheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+  masterSheet.getRange(1, 1, 1, headers.length).setBackground('#4285f4');
+  masterSheet.getRange(1, 1, 1, headers.length).setFontColor('#ffffff');
+  
+  // Add player data
+  const playerData = allPlayers.map((player, index) => [
+    index + 1, // Rank
+    player.name,
+    player.team,
+    player.position,
+    player.fpts
+  ]);
+  
+  if (playerData.length > 0) {
+    masterSheet.getRange(2, 1, playerData.length, headers.length).setValues(playerData);
+    
+    // Format FPTS column as numbers with 2 decimal places
+    masterSheet.getRange(2, 5, playerData.length, 1).setNumberFormat('#,##0.00');
+    
+    // Auto-resize columns
+    masterSheet.autoResizeColumns(1, headers.length);
+    
+    // Add timestamp
+    const timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+    masterSheet.getRange(playerData.length + 3, 1).setValue(`Last updated: ${timestamp}`);
+    masterSheet.getRange(playerData.length + 3, 1).setFontStyle('italic');
+    masterSheet.getRange(playerData.length + 3, 1).setFontColor('#666666');
+    
+    // Add alternating row colors for better readability
+    const range = masterSheet.getRange(2, 1, playerData.length, headers.length);
+    range.applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
+  }
+  
+  Logger.log(`Master Rankings created with ${playerData.length} players`);
 }
